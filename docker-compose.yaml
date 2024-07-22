@@ -1,0 +1,41 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: ngong
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app1
+      - app2
+
+  app1:
+    build: .
+    container_name: app1
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app
+
+  app2:
+    build: .
+    container_name: app2
+    ports:
+      - "3002:3000"
+    volumes:
+      - .:/app
+
+  locust-master:
+    image: locustio/locust
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locust-task.py --master --host http://ngong:80
+
+  locust-worker:
+    image: locustio/locust
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locust-task.py --worker --master-host locust-master 
